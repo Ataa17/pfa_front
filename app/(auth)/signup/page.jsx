@@ -39,7 +39,7 @@ export default function SignUpPage() {
           <Input
             name="email"
             type="email"
-            placeholder="operator@sovereign.io"
+            placeholder="operator@aiops.io"
             value={form.email}
             onChange={handleChange}
             className="bg-[#1c2333] border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-blue-500"

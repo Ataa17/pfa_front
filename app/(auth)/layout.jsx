@@ -6,7 +6,7 @@ export default function AuthLayout({ children }) {
 
       <header className="py-4 text-center">
         <span className="font-bold text-white text-lg tracking-tight">
-          Sovereign Observer
+         AIOPS Monitoring
         </span>
       </header>
 
