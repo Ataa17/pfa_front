@@ -11,7 +11,7 @@ export default function AuthLayout({ children }) {
       </header>
 
       <main className="flex-1 flex items-center justify-center px-4 relative">
-        <div className="absolute bottom-0 right-0 w-[600px] h-[400px] rounded-full bg-teal-900/20 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[400px] p-4  rounded-full bg-teal-900/20 blur-[120px] pointer-events-none" />
         <AuthCard>{children}</AuthCard>
       </main>
 

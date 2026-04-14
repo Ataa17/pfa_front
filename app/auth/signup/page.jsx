@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function SignUpPage() {
-	return <main>Sign Up</main>;
+  redirect("/signup");
 }

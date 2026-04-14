@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function SignInPage() {
-	return <main>Sign In</main>;
+  redirect("/signin");
 }
