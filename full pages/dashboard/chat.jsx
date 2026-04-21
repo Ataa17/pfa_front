@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { Send ,Sparkles } from "lucide-react"
 import UserMessage from "@/ui/chat/user-message"
 import AIMessage from "@/ui/chat/ai-message"
+import TypingDots from "@/ui/chat/typing-dots"
 
 export default function ChatPage() {
   const [sessionId, setSessionId] = useState("user-1")
@@ -31,7 +32,10 @@ export default function ChatPage() {
   async function sendMessage() {
     if (!input.trim()) return
     const text = input.trim()
-    setMessages((m) => [...m, { type: "user", text }])
+    const typingId = `typing-${Date.now()}`
+
+    // Append the user message and a typing placeholder for the AI
+    setMessages((m) => [...m, { type: "user", text }, { type: "ai-typing", id: typingId }])
     setInput("")
     setLoading(true)
     try {
@@ -43,12 +47,13 @@ export default function ChatPage() {
 
       const data = await res.json()
       if (res.ok) {
-        setMessages((m) => [...m, { type: "ai", text: data.output }])
+        // Replace typing placeholder with actual AI message
+        setMessages((prev) => prev.map((msg) => (msg.type === "ai-typing" && msg.id === typingId ? { type: "ai", text: data.output } : msg)))
       } else {
-        setMessages((m) => [...m, { type: "ai", text: `Error: ${data.error || data}` }])
+        setMessages((prev) => prev.map((msg) => (msg.type === "ai-typing" && msg.id === typingId ? { type: "ai", text: `Error: ${data.error || data}` } : msg)))
       }
     } catch (err) {
-      setMessages((m) => [...m, { type: "ai", text: `Error: ${err.message || err}` }])
+      setMessages((prev) => prev.map((msg) => (msg.type === "ai-typing" && msg.id === typingId ? { type: "ai", text: `Error: ${err.message || err}` } : msg)))
     } finally {
       setLoading(false)
     }
@@ -71,7 +76,15 @@ export default function ChatPage() {
             ) : (
               messages.map((m, i) => (
                 <div key={i}>
-                  {m.type === "user" ? <UserMessage>{m.text}</UserMessage> : <AIMessage>{m.text}</AIMessage>}
+                  {m.type === "user" ? (
+                    <UserMessage>{m.text}</UserMessage>
+                  ) : m.type === "ai" ? (
+                    <AIMessage>{m.text}</AIMessage>
+                  ) : m.type === "ai-typing" ? (
+                    <AIMessage>
+                      <TypingDots />
+                    </AIMessage>
+                  ) : null}
                 </div>
               ))
             )}
