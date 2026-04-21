@@ -31,7 +31,8 @@ export default function AIMessage({ children }) {
         <div className="rounded-full bg-white/5 p-2">
           <Cpu className="size-5 text-white" />
         </div>
-        <div className="rounded-xl bg-slate-800 px-4 py-2 text-white break-words prose prose-invert max-w-full">
+        <div className="rounded-xl bg-slate-800 px-4 py-2 text-white break-words prose prose-invert max-w-full ai-message">
+          <style>{`.ai-message, .ai-message * { color: #ffffff !important; } .ai-message a { color: #ffffff !important; text-decoration: underline !important; } .ai-message pre { background-color: #0f172a !important; }`}</style>
           {text ? (
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>
               {text}
