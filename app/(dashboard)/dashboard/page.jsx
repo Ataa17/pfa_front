@@ -99,7 +99,7 @@ export default function DashboardPage() {
   const getStepColorClasses = (color, active) => {
     if (!active) {
       return {
-        container: "bg-outline-variant/10 border-outline-variant/30 opacity-40",
+        container: "bg-blue-800 border-white/80",
         icon: "text-on-surface-variant",
         text: "text-on-surface-variant/40",
         bar: "bg-outline-variant/10",
@@ -109,32 +109,59 @@ export default function DashboardPage() {
     switch (color) {
       case "secondary-base":
         return {
-          container: "bg-secondary-base/10 border-secondary-base",
+          container: "bg-blue-800 border-white/80",
           icon: "text-secondary-base",
           text: "text-secondary-base",
           bar: "bg-secondary-base",
         }
       case "tertiary-base":
         return {
-          container: "bg-tertiary-base/10 border-tertiary-base",
+          container: "bg-blue-800 border-white/80",
           icon: "text-tertiary-base",
           text: "text-tertiary-base",
           bar: "bg-tertiary-base",
         }
       case "primary-base":
         return {
-          container: "bg-primary-base/10 border-primary-base",
+          container: "bg-blue-800 border-white/80",
           icon: "text-primary-base",
           text: "text-primary-base",
-          bar: "bg-primary-base",
+          bar: "bg-blue-800",
         }
       default:
         return {
-          container: "bg-outline-variant/10 border-outline-variant/30 opacity-40",
+          container: "bg-blue-800 border-white/80",
           icon: "text-on-surface-variant",
           text: "text-on-surface-variant/40",
           bar: "bg-outline-variant/10",
         }
+    }
+  }
+
+  const getCpuStyles = (inst) => {
+    if (inst.stressed) {
+      return {
+        panel: "bg-[#2b2623] border-[#3e352f]",
+        value: "text-[#f3a2a4]",
+        tag: "text-[#f3a2a4]",
+        bar: "bg-[#f3a2a4]",
+      }
+    }
+
+    if (inst.tag === "NOMINAL") {
+      return {
+        panel: "bg-[#151b27] border-[#1f2a3a]",
+        value: "text-[#5f6780]",
+        tag: "text-[#5f6780]",
+        bar: "bg-[#56d8b3]",
+      }
+    }
+
+    return {
+      panel: "bg-[#151b27] border-[#1f2a3a]",
+      value: "text-[#5f6780]",
+      tag: "text-[#5f6780]",
+      bar: "bg-blue-800",
     }
   }
 
@@ -147,24 +174,24 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="aspect-square bg-slate-900/95 border border-outline-variant rounded-3xl p-6 flex flex-col justify-between hover:border-on-surface-variant/30 transition-colors group"
+            className="aspect-square bg-blue-800 border border-outline-variant rounded-3xl p-6 flex flex-col justify-between hover:border-on-surface-variant/30 transition-colors group"
           >
             <div
               className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
                 kpi.color.includes("primary")
-                  ? "bg-primary-base shadow-lg shadow-primary-base/20"
+                  ? "bg-blue-800 shadow-lg shadow-blue-800/20"
                   : "bg-surface-container"
               }`}
             >
               <kpi.icon className={`w-6 h-6 ${kpi.color.includes("primary") ? "text-white" : kpi.color}`} />
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-on-surface-variant mb-1">
+              <span className="text-[12px] font-mono uppercase tracking-[0.2em] text-on-surface-variant mb-1">
                 {kpi.label}
               </span>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-semibold text-on-surface">{kpi.val}</span>
-                <span className={`text-[10px] uppercase font-bold tracking-tight ${kpi.color}`}>
+                <span className={`text-[12px] uppercase font-bold tracking-tight ${kpi.color}`}>
                   {kpi.sub}
                 </span>
               </div>
@@ -177,7 +204,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-lg font-medium">Observer Intelligence Pipeline</h3>
           <div className="flex gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary-base animate-pulse shadow-[0_0_8px_rgba(37,99,235,0.6)]" />
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-800 animate-pulse shadow-[0_0_8px_rgba(30,64,175,0.6)]" />
             <div className="w-1.5 h-1.5 rounded-full bg-outline-variant" />
             <div className="w-1.5 h-1.5 rounded-full bg-outline-variant" />
           </div>
@@ -195,7 +222,7 @@ export default function DashboardPage() {
                     <step.icon className={`w-5 h-5 ${colors.icon}`} />
                   </div>
                   <div className="text-center">
-                    <span className={`text-[10px] font-bold uppercase tracking-widest ${colors.text}`}>
+                    <span className={`text-[11px] font-bold uppercase tracking-widest ${colors.text}`}>
                       {step.label}
                     </span>
                   </div>
@@ -228,20 +255,20 @@ export default function DashboardPage() {
         <div className="bg-surface-low border border-outline-variant rounded-[32px] p-4 md:p-8 flex flex-col overflow-x-auto">
           <table className="w-full min-w-[900px] text-left border-collapse">
             <thead>
-              <tr className="border-b border-outline-variant/30">
-                <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em]">
+              <tr className=" border-b border-outline-variant/30">
+                <th className="px-6 py-4 text-[13px] font-bold text-[#60a5fa] uppercase tracking-[0.2em]">
                   Instance ID
                 </th>
-                <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] text-center">
+                <th className="px-6 py-4 text-[13px] font-bold text-[#60a5fa] uppercase tracking-[0.2em] text-center">
                   Status
                 </th>
-                <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em]">
+                <th className="px-6 py-4 text-[13px] font-bold text-[#60a5fa] uppercase tracking-[0.2em]">
                   Instance Type
                 </th>
-                <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] w-1/3">
-                  CPU Load
+                <th className="px-6 py-4 text-[13px] font-bold text-[#60a5fa] uppercase tracking-[0.2em] w-1/3">
+                  CPU Utilization (Real-Time)
                 </th>
-                <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] text-right">
+                <th className="px-6 py-4 text-[13px] font-bold text-[#60a5fa] uppercase tracking-[0.2em] text-right">
                   Throughput
                 </th>
               </tr>
@@ -267,8 +294,8 @@ export default function DashboardPage() {
                       <div
                         className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter border ${
                           inst.stressed
-                            ? "text-error-base bg-error-base/10 border-error-base/20"
-                            : "text-secondary-base bg-secondary-base/10 border-secondary-base/20"
+                            ? "text-[#f3a2a4] bg-[#f3a2a4]/10 border-[#f3a2a4]/40"
+                            : "text-[#56d8b3] bg-[#56d8b3]/10 border-[#56d8b3]/40"
                         }`}
                       >
                         {inst.status}
@@ -276,21 +303,28 @@ export default function DashboardPage() {
                     </div>
                   </td>
                   <td className="px-6 py-6 text-sm font-medium text-on-surface">{inst.type}</td>
-                  <td className="px-6 py-6">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className={`text-[10px] font-bold ${inst.stressed ? "text-error-base" : "text-on-surface"}`}>
-                        {inst.cpu}%
-                      </span>
-                      <span className="text-[9px] text-on-surface-variant/50 uppercase tracking-tighter">
-                        {inst.tag}
-                      </span>
-                    </div>
-                    <div className="h-[2px] w-full bg-surface-container rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${inst.cpu}%` }}
-                        className={`h-full ${inst.stressed ? "bg-error-base" : "bg-primary-base"}`}
-                      />
+                  <td className="px-6 py-4">
+                    <div
+                      className={`rounded-xl border px-4 py-4 ${getCpuStyles(inst).panel}`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className={`text-lg font-mono font-semibold ${getCpuStyles(inst).value}`}>
+                          {inst.cpu}%
+                        </span>
+                        <span
+                          className={`text-[11px] uppercase tracking-[0.16em] font-semibold ${getCpuStyles(inst).tag}`}
+                        >
+                          {inst.tag}
+                        </span>
+                      </div>
+                      <div className="h-3 w-full bg-[#202838] rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${inst.cpu}%` }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          className={`h-full rounded-full ${getCpuStyles(inst).bar}`}
+                        />
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-6 text-right text-sm font-semibold tabular-nums">{inst.throughput}</td>
