@@ -33,7 +33,7 @@ function AppSidebar() {
             <SidebarMenu className={"gap-3"}>
               {routes.map((route) => (
                 <SidebarMenuItem key={route.href}>
-                  <SidebarMenuButton a tooltip={route.label} className="px-3 py-6 w-[95%]  text-xl rounded-sm hover:bg-[#111C2F] hover:scale-105 transition-all ">
+                  <SidebarMenuButton asChild tooltip={route.label} className="px-3 py-6 w-[95%]  text-xl rounded-sm hover:bg-[#111C2F] hover:scale-105 transition-all ">
                     <Link href={route.href} className="w-full">
                       <div className="flex items-center gap-3 w-full text-white">
                         {route.Icon && <route.Icon className="size-5 text-white" />}
