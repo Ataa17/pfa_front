@@ -91,9 +91,6 @@ export default function SettingsPage() {
           </div>
           <div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white">Profile Settings</h2>
-            <p className="text-xs font-mono uppercase tracking-[0.12em] text-blue-200/70 mt-1">
-              Loaded from /auth/me
-            </p>
           </div>
         </div>
 

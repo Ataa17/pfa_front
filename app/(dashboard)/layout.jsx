@@ -79,14 +79,13 @@ export default function DashboardLayout({ children }) {
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    // Auth guard temporarily disabled during development:
-    // const token = localStorage.getItem("access_token")
-    // const user = localStorage.getItem("auth_user")
-    //
-    // if (!token && !user) {
-    //   router.replace("/signin")
-    //   return
-    // }
+   const token = localStorage.getItem("access_token")
+   const user = localStorage.getItem("auth_user")
+    
+    if (!token && !user) {
+       router.replace("/signin")
+       return
+     }
 
     setIsReady(true)
   }, [router])
