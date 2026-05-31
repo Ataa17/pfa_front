@@ -1,3 +1,7 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Home, Bell, MessageSquare, BarChart2 } from "lucide-react"
@@ -53,6 +57,23 @@ function AppSidebar() {
 }
 
 export default function DashboardLayout({ children }) {
+  const router = useRouter()
+  const [isReady, setIsReady] = useState(false)
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token")
+    const user = localStorage.getItem("auth_user")
+
+    if (!token && !user) {
+      router.replace("/signin")
+      return
+    }
+
+    setIsReady(true)
+  }, [router])
+
+  if (!isReady) return null
+
   return (
     <TooltipProvider delayDuration={0}>
       <SidebarProvider defaultOpen>

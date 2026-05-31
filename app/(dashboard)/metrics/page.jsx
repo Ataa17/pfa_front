@@ -2,39 +2,103 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import {
-	AreaChart,
-	Area,
-	Line,
-	XAxis,
-	CartesianGrid,
-	Tooltip,
-} from "recharts"
-import {
-	TrendingUp,
-	Clock,
-	ShieldCheck,
-	Search,
-	Bell,
-	Settings,
-	Download,
-	ChevronLeft,
-	ChevronRight,
-} from "lucide-react"
-import { motion } from "motion/react"
+import { AreaChart, Area, Line, XAxis, CartesianGrid, Tooltip } from "recharts"
+import { motion } from "framer-motion"
+import { TrendingUp, Clock, ShieldCheck, Download, Bell, Settings, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import instances from "@/data/instances"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
-const MOCK_CHART_DATA = [
-	{ time: "15:45", actual: 40, forecast: null },
-	{ time: "15:50", actual: 45, forecast: null },
-	{ time: "15:55", actual: 42, forecast: null },
-	{ time: "16:00", actual: 60, forecast: 60 },
-	{ time: "16:05", actual: null, forecast: 65 },
-	{ time: "16:10", actual: null, forecast: 55 },
-	{ time: "16:15", actual: null, forecast: 70 },
-	{ time: "16:20", actual: null, forecast: 62 },
-	{ time: "16:25", actual: null, forecast: 68 },
+const DEFAULT_CHART_DATA = [
+	{ time: "15:45", actual: 32, forecast: null },
+	{ time: "15:50", actual: 36, forecast: null },
+	{ time: "15:55", actual: 33, forecast: null },
+	{ time: "16:00", actual: 38, forecast: 38 },
+	{ time: "16:05", actual: null, forecast: 42 },
+	{ time: "16:10", actual: null, forecast: 39 },
+	{ time: "16:15", actual: null, forecast: 44 },
+	{ time: "16:20", actual: null, forecast: 41 },
+	{ time: "16:25", actual: null, forecast: 43 },
 ]
+
+const INSTANCE_FORECASTS = {
+	"i-0a823f99e41b": [
+		{ time: "15:45", actual: 68, forecast: null },
+		{ time: "15:50", actual: 72, forecast: null },
+		{ time: "15:55", actual: 66, forecast: null },
+		{ time: "16:00", actual: 74, forecast: 74 },
+		{ time: "16:05", actual: null, forecast: 82 },
+		{ time: "16:10", actual: null, forecast: 78 },
+		{ time: "16:15", actual: null, forecast: 86 },
+		{ time: "16:20", actual: null, forecast: 80 },
+		{ time: "16:25", actual: null, forecast: 88 },
+	],
+	"i-092f232cc101": [
+		{ time: "15:45", actual: 18, forecast: null },
+		{ time: "15:50", actual: 20, forecast: null },
+		{ time: "15:55", actual: 16, forecast: null },
+		{ time: "16:00", actual: 22, forecast: 22 },
+		{ time: "16:05", actual: null, forecast: 24 },
+		{ time: "16:10", actual: null, forecast: 21 },
+		{ time: "16:15", actual: null, forecast: 23 },
+		{ time: "16:20", actual: null, forecast: 20 },
+		{ time: "16:25", actual: null, forecast: 19 },
+	],
+	"i-0551bc999332": [
+		{ time: "15:45", actual: 32, forecast: null },
+		{ time: "15:50", actual: 36, forecast: null },
+		{ time: "15:55", actual: 33, forecast: null },
+		{ time: "16:00", actual: 38, forecast: 38 },
+		{ time: "16:05", actual: null, forecast: 42 },
+		{ time: "16:10", actual: null, forecast: 39 },
+		{ time: "16:15", actual: null, forecast: 44 },
+		{ time: "16:20", actual: null, forecast: 41 },
+		{ time: "16:25", actual: null, forecast: 43 },
+	],
+}
+
+const getForecastData = (instanceId) => INSTANCE_FORECASTS[instanceId] || DEFAULT_CHART_DATA
+
+const METRIC_OPTIONS = [
+	{ id: "throughput", label: "Throughput", unit: "MB/s", max: null },
+	{ id: "cpu", label: "CPU Usage", unit: "%", max: 100 },
+	{ id: "memory", label: "Memory Usage", unit: "%", max: 100 },
+	{ id: "gpuUtilization", label: "GPU Utilization", unit: "%", max: 100 },
+	{ id: "gpuMemoryUtilization", label: "GPU Memory", unit: "%", max: 100 },
+	{ id: "networkIn", label: "Network In", unit: "MB/s", max: null },
+	{ id: "networkOut", label: "Network Out", unit: "MB/s", max: null },
+	{ id: "diskReadOps", label: "Disk Read Ops", unit: "ops/s", max: null },
+	{ id: "diskWriteOps", label: "Disk Write Ops", unit: "ops/s", max: null },
+]
+
+const METRIC_SCALES = {
+	throughput: 1,
+	cpu: 0.75,
+	memory: 0.6,
+	gpuUtilization: 0.5,
+	gpuMemoryUtilization: 0.55,
+	networkIn: 0.35,
+	networkOut: 0.35,
+	diskReadOps: 0.25,
+	diskWriteOps: 0.25,
+}
+
+const scaleValue = (value, scale, max) => {
+	const next = Math.round(value * scale * 10) / 10
+	if (typeof max === "number") return Math.min(max, Math.max(0, next))
+	return next
+}
+
+const getMetricSeries = (instanceId, metric, stressed) => {
+	const base = getForecastData(instanceId)
+	const scale = (METRIC_SCALES[metric.id] ?? 1) * (stressed ? 1.1 : 1)
+
+	return base.map((point) => ({
+		...point,
+		actual: point.actual == null ? null : scaleValue(point.actual, scale, metric.max),
+		forecast: point.forecast == null ? null : scaleValue(point.forecast, scale, metric.max),
+	}))
+}
 
 const MOCK_EVENTS = [
 	{
@@ -98,6 +162,11 @@ const METRICS_KPIS = [
 	},
 ]
 
+const GLASS_CARD =
+	"bg-[#0f1724]/70 border border-white/12 backdrop-blur-2xl shadow-[0_12px_60px_-22px_rgba(59,130,246,0.45)] ring-1 ring-white/10"
+const GLASS_ICON =
+	"bg-white/10 border border-white/10 shadow-[0_8px_24px_-14px_rgba(59,130,246,0.6)] ring-1 ring-white/20 backdrop-blur"
+
 function StatusBadge({ status }) {
 	const styles = {
 		success: "text-[#56d8b3] bg-[#56d8b3]/10 border-[#56d8b3]/40",
@@ -129,19 +198,16 @@ function StatusBadge({ status }) {
 function StatCard({ icon: Icon, value, subValue, detail, color, badge, progress, delay }) {
 	const colorMap = {
 		primary: {
-			container: "bg-blue-800",
 			icon: "text-primary-base",
 			detail: "text-primary-base",
 			bar: "bg-primary-base",
 		},
 		secondary: {
-			container: "bg-surface-container",
 			icon: "text-secondary-base",
 			detail: "text-on-surface-variant",
 			bar: "bg-secondary-base",
 		},
 		tertiary: {
-			container: "bg-surface-container",
 			icon: "text-tertiary-base",
 			detail: "text-on-surface-variant",
 			bar: "bg-tertiary-base",
@@ -163,11 +229,14 @@ function StatCard({ icon: Icon, value, subValue, detail, color, badge, progress,
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ delay }}
-			className="bg-blue-800 border border-outline-variant rounded-3xl p-6 flex flex-col gap-4 hover:border-on-surface-variant/30 transition-colors"
+			className={cn(
+				"rounded-3xl p-6 flex flex-col gap-4 hover:border-on-surface-variant/30 transition-colors",
+				GLASS_CARD
+			)}
 		>
 			<div className="flex justify-between items-start">
 				<span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-[0.18em]">{badge}</span>
-				<div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center", palette.container)}>
+				<div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center", GLASS_ICON)}>
 					<Icon className={cn("w-5 h-5", palette.icon)} />
 				</div>
 			</div>
@@ -181,7 +250,7 @@ function StatCard({ icon: Icon, value, subValue, detail, color, badge, progress,
 			</div>
 
 			{progress !== undefined && (
-				<div className="w-full h-2 bg-[#202838] rounded-full overflow-hidden">
+				<div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
 					<motion.div
 						initial={{ width: 0 }}
 						animate={{ width: `${clampedProgress}%` }}
@@ -199,6 +268,9 @@ export default function MetricsPage() {
 	const chartContainerRef = useRef(null)
 	const [chartWidth, setChartWidth] = useState(0)
 	const [eventPage, setEventPage] = useState(1)
+	const [selectedInstanceId, setSelectedInstanceId] = useState(instances[0]?.id ?? "")
+	const [instanceMenuOpen, setInstanceMenuOpen] = useState(false)
+	const [selectedMetricId, setSelectedMetricId] = useState(METRIC_OPTIONS[0]?.id ?? "throughput")
 
 	useEffect(() => {
 		const updateChartWidth = () => {
@@ -219,6 +291,10 @@ export default function MetricsPage() {
 	}, [])
 
 	const chartHeight = chartWidth < 640 ? 300 : chartWidth < 1024 ? 340 : 390
+	const selectedInstance = instances.find((inst) => inst.id === selectedInstanceId) || instances[0]
+	const selectedMetric = METRIC_OPTIONS.find((metric) => metric.id === selectedMetricId) || METRIC_OPTIONS[0]
+	const hasAnomaly = selectedInstance?.status === "STRESSED"
+	const chartData = getMetricSeries(selectedInstance?.id, selectedMetric, hasAnomaly)
 	const eventsPerPage = 4
 	const totalEventPages = Math.max(1, Math.ceil(MOCK_EVENTS.length / eventsPerPage))
 	const pagedEvents = MOCK_EVENTS.slice((eventPage - 1) * eventsPerPage, eventPage * eventsPerPage)
@@ -246,18 +322,60 @@ export default function MetricsPage() {
 				<div>
 					<h2 className="text-2xl md:text-3xl font-bold tracking-tight">Predictive Metrics Workspace</h2>
 					<p className="text-sm text-outline-variant font-mono mt-2 uppercase tracking-[0.12em]">
-						Throughput forecast and event telemetry for sovereign-observer-v4
+						Throughput forecast and event telemetry for {selectedInstance?.id || "selected instance"}
 					</p>
 				</div>
 
 				<div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
 					<div className="relative w-full sm:w-72">
-						<Search className="w-4 h-4 text-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2" />
-						<input
-							type="text"
-							placeholder="Search resources..."
-							className="w-full rounded-xl border border-outline-variant bg-surface-low px-10 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary-base"
-						/>
+						<Popover open={instanceMenuOpen} onOpenChange={setInstanceMenuOpen}>
+							<PopoverTrigger asChild>
+								<button
+									type="button"
+									aria-haspopup="listbox"
+									aria-expanded={instanceMenuOpen}
+									className="w-full rounded-xl border border-white/10 bg-white/5 px-3 pr-9 py-2.5 text-sm text-on-surface backdrop-blur-xl shadow-[0_8px_24px_-18px_rgba(59,130,246,0.35)] focus:outline-none focus:border-primary-base focus:ring-2 focus:ring-primary-base/30 hover:border-white/20 transition-colors text-left"
+								>
+									<span className="block truncate">
+										{selectedInstance?.id} • {selectedInstance?.region}
+									</span>
+									<ChevronDown className="w-4 h-4 text-on-surface-variant absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+								</button>
+							</PopoverTrigger>
+							<PopoverContent
+								align="start"
+								sideOffset={8}
+								className="w-[--radix-popover-trigger-width] border border-white/10 bg-[#0f1724]/85 text-white backdrop-blur-xl shadow-[0_20px_60px_-30px_rgba(59,130,246,0.5)] p-2"
+							>
+								<div role="listbox" className="flex flex-col">
+									{instances.map((inst) => {
+										const isSelected = inst.id === selectedInstanceId
+										return (
+											<button
+												key={inst.id}
+												role="option"
+												aria-selected={isSelected}
+												onClick={() => {
+													setSelectedInstanceId(inst.id)
+													setInstanceMenuOpen(false)
+												}}
+												className={cn(
+													"flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
+													isSelected
+														? "bg-white/10 text-white"
+														: "text-on-surface-variant hover:bg-white/8 hover:text-white"
+												)}
+											>
+												<span className="truncate">{inst.id}</span>
+												<span className="text-[10px] uppercase tracking-[0.16em] text-white/50">
+													{inst.region}
+												</span>
+											</button>
+										)
+									})}
+								</div>
+							</PopoverContent>
+						</Popover>
 					</div>
 
 					<div className="flex items-center gap-2">
@@ -292,31 +410,72 @@ export default function MetricsPage() {
 
 					<div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
 						<div>
-							<h3 className="text-xl font-semibold">Throughput Forecast</h3>
+							<h3 className="text-xl font-semibold">{selectedMetric?.label} Forecast</h3>
 							<p className="text-sm text-outline-variant font-mono mt-1 uppercase tracking-[0.12em]">
 								40-minute LSTM projection window
 							</p>
+							<div className="mt-4 flex flex-wrap items-center gap-2">
+								{METRIC_OPTIONS.map((metric) => {
+									const isActive = metric.id === selectedMetricId
+									return (
+										<button
+											key={metric.id}
+											type="button"
+											onClick={() => setSelectedMetricId(metric.id)}
+											className={cn(
+												"px-3 py-1.5 rounded-full border text-[10px] font-mono uppercase tracking-[0.14em] transition-colors",
+												isActive
+													? "bg-white/10 text-white border-white/25"
+													: "text-on-surface-variant border-white/10 hover:border-white/20 hover:text-white"
+											)}
+										>
+											{metric.label}
+										</button>
+									)
+								})}
+							</div>
 						</div>
 
-						<div className="flex items-center gap-4 bg-blue-800/60 border border-outline-variant px-4 py-2 rounded-2xl">
-							<div className="flex items-center gap-2">
-								<div className="w-4 h-[2px] bg-primary-base" />
-								<span className="text-[10px] font-mono uppercase tracking-[0.14em] text-on-surface-variant">
-									Actual
-								</span>
+						<div className="flex flex-wrap items-center gap-3">
+							<div className="flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl backdrop-blur-xl">
+								<div className="flex items-center gap-2">
+									<div className="w-4 h-[2px] bg-primary-base" />
+									<span className="text-[10px] font-mono uppercase tracking-[0.14em] text-on-surface-variant">
+										Actual
+									</span>
+								</div>
+								<div className="flex items-center gap-2">
+									<div className="w-4 h-[2px] border-t border-dashed border-secondary-base" />
+									<span className="text-[10px] font-mono uppercase tracking-[0.14em] text-on-surface-variant">
+										Forecast
+									</span>
+								</div>
 							</div>
-							<div className="flex items-center gap-2">
-								<div className="w-4 h-[2px] border-t border-dashed border-secondary-base" />
-								<span className="text-[10px] font-mono uppercase tracking-[0.14em] text-on-surface-variant">
-									Forecast
-								</span>
+							<div
+								className={cn(
+									"inline-flex items-center gap-2 px-3 py-2 rounded-full border text-[10px] font-bold uppercase tracking-[0.14em]",
+									hasAnomaly
+										? "text-[#f3a2a4] bg-[#f3a2a4]/10 border-[#f3a2a4]/40"
+										: "text-[#56d8b3] bg-[#56d8b3]/10 border-[#56d8b3]/40"
+								)}
+							>
+								<div
+									className={cn(
+										"w-1.5 h-1.5 rounded-full",
+										hasAnomaly ? "bg-[#f3a2a4] animate-pulse" : "bg-[#56d8b3]"
+									)}
+								/>
+								{hasAnomaly ? "Anomaly Detected" : "No Anomalies"}
 							</div>
 						</div>
 					</div>
 
 					<div ref={chartContainerRef} className="relative flex-1 min-h-[320px] h-[320px] md:h-[360px] lg:h-[390px] min-w-0">
+						<div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 -translate-x-7 -rotate-90 text-[10px] font-mono uppercase tracking-[0.2em] text-on-surface-variant/70">
+							{selectedMetric?.unit}
+						</div>
 						{chartWidth > 0 && (
-							<AreaChart width={chartWidth} height={chartHeight} data={MOCK_CHART_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
+							<AreaChart width={chartWidth} height={chartHeight} data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
 								<defs>
 									<linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
 										<stop offset="5%" stopColor="#60a5fa" stopOpacity={0.28} />
