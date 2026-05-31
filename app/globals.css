@@ -127,6 +127,15 @@ html {
   border-radius: var(--radius-full);
 }
 
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   margin: 0;
   background-color: var(--bg-base);

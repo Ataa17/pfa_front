@@ -89,6 +89,45 @@ const scaleValue = (value, scale, max) => {
 	return next
 }
 
+const getAnomalyInsight = (instance, metric) => {
+	if (!instance) {
+		return {
+			cause: "The selected instance is missing from the telemetry feed.",
+			suggestion: "Refresh the metrics workspace and reselect the instance.",
+		}
+	}
+
+	switch (metric?.id) {
+		case "cpu":
+			return {
+				cause: "A burst of compute-heavy requests or a runaway background task is pushing CPU beyond the forecasted range.",
+				suggestion: "Check recent deployments, terminate any runaway workers, and consider scaling the instance group vertically or horizontally.",
+			}
+		case "memory":
+			return {
+				cause: "Memory pressure is likely caused by a leaking process, cache growth, or a sudden traffic spike that increased active sessions.",
+				suggestion: "Inspect memory consumers, clear oversized caches, and restart the affected service if usage keeps climbing.",
+			}
+		case "networkIn":
+		case "networkOut":
+			return {
+				cause: "Unusual traffic volume or a chatty downstream dependency is driving network metrics outside the normal envelope.",
+				suggestion: "Review upstream callers, rate-limit noisy clients, and verify there are no retry storms or failed sync jobs.",
+			}
+		case "diskReadOps":
+		case "diskWriteOps":
+			return {
+				cause: "A storage-heavy workload, batch job, or database maintenance task is likely causing the disk spike.",
+				suggestion: "Check scheduled jobs and database activity, then move heavy I/O tasks off-peak or spread them across instances.",
+			}
+		default:
+			return {
+				cause: "The current forecast diverges from the live pattern, which usually indicates a workload surge or a dependency slowdown.",
+				suggestion: "Inspect recent releases, service dependencies, and scaling policies to confirm whether the anomaly is expected or requires intervention.",
+			}
+	}
+}
+
 const getMetricSeries = (instanceId, metric, stressed) => {
 	const base = getForecastData(instanceId)
 	const scale = (METRIC_SCALES[metric.id] ?? 1) * (stressed ? 1.1 : 1)
@@ -294,6 +333,7 @@ export default function MetricsPage() {
 	const selectedInstance = instances.find((inst) => inst.id === selectedInstanceId) || instances[0]
 	const selectedMetric = METRIC_OPTIONS.find((metric) => metric.id === selectedMetricId) || METRIC_OPTIONS[0]
 	const hasAnomaly = selectedInstance?.status === "STRESSED"
+	const anomalyInsight = getAnomalyInsight(selectedInstance, selectedMetric)
 	const chartData = getMetricSeries(selectedInstance?.id, selectedMetric, hasAnomaly)
 	const eventsPerPage = 4
 	const totalEventPages = Math.max(1, Math.ceil(MOCK_EVENTS.length / eventsPerPage))
@@ -451,22 +491,41 @@ export default function MetricsPage() {
 									</span>
 								</div>
 							</div>
-							<div
-								className={cn(
-									"inline-flex items-center gap-2 px-3 py-2 rounded-full border text-[10px] font-bold uppercase tracking-[0.14em]",
-									hasAnomaly
-										? "text-[#f3a2a4] bg-[#f3a2a4]/10 border-[#f3a2a4]/40"
-										: "text-[#56d8b3] bg-[#56d8b3]/10 border-[#56d8b3]/40"
-								)}
-							>
-								<div
-									className={cn(
-										"w-1.5 h-1.5 rounded-full",
-										hasAnomaly ? "bg-[#f3a2a4] animate-pulse" : "bg-[#56d8b3]"
-									)}
-								/>
-								{hasAnomaly ? "Anomaly Detected" : "No Anomalies"}
-							</div>
+							{hasAnomaly ? (
+								<Popover>
+									<PopoverTrigger asChild>
+										<button
+											type="button"
+											className="inline-flex items-center gap-2 px-3 py-2 rounded-full border text-[10px] font-bold uppercase tracking-[0.14em] cursor-pointer transition-colors text-[#f3a2a4] bg-[#f3a2a4]/10 border-[#f3a2a4]/40 hover:bg-[#f3a2a4]/15"
+										>
+											<div className="w-1.5 h-1.5 rounded-full bg-[#f3a2a4] animate-pulse" />
+											Anomaly Detected
+										</button>
+									</PopoverTrigger>
+									<PopoverContent
+										align="start"
+										side="bottom"
+										sideOffset={10}
+										className="w-96 border border-white/10 bg-[#0f1724]/90 text-white backdrop-blur-xl shadow-[0_20px_60px_-30px_rgba(59,130,246,0.5)]"
+									>
+										<div className="space-y-3">
+											<div>
+												<p className="text-xs uppercase tracking-[0.2em] text-blue-200/70">Probable Cause</p>
+												<p className="mt-2 text-sm leading-6 text-white/90">{anomalyInsight.cause}</p>
+											</div>
+											<div className="rounded-lg border border-white/10 bg-white/5 p-3">
+												<p className="text-xs uppercase tracking-[0.2em] text-blue-200/70">Suggested Fix</p>
+												<p className="mt-2 text-sm leading-6 text-white/90">{anomalyInsight.suggestion}</p>
+											</div>
+										</div>
+									</PopoverContent>
+								</Popover>
+							) : (
+								<div className="inline-flex items-center gap-2 px-3 py-2 rounded-full border text-[10px] font-bold uppercase tracking-[0.14em] text-[#56d8b3] bg-[#56d8b3]/10 border-[#56d8b3]/40">
+									<div className="w-1.5 h-1.5 rounded-full bg-[#56d8b3]" />
+									No Anomalies
+								</div>
+							)}
 						</div>
 					</div>
 
